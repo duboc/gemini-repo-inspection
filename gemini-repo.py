@@ -12,8 +12,6 @@ import git
 import magika
 from requests_html import HTMLSession
 
-# from vertexai.preview.generative_models import GenerativeModel
-
 from vertexai.generative_models import GenerativeModel, Part, FinishReason
 import vertexai.preview.generative_models as generative_models
 
@@ -137,6 +135,7 @@ if st.button("Clonar e Index repo"):
 
 question = st.selectbox('Selecione um prompt:', [
             'Give me a summary of this codebase, and tell me the top 3 things that I can learn from it.',
+            'Provide a README explaining what this application do and how to properly use it',
             'Provide a getting started guide to onboard new developers to the codebase.',
             'Find the top 3 most severe issues in the codebase.',
             'Find the most severe bug in the codebase that you can provide a code fix for.',
