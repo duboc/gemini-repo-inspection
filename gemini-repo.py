@@ -2,19 +2,27 @@ import streamlit as st
 import random
 import time
 import requests
+import re
 import vertexai
 import os
 import shutil
 from pathlib import Path
-
+from utils_streamlit import reset_st_state
 import git
 import magika
 from requests_html import HTMLSession
 
-from vertexai.preview.generative_models import GenerativeModel
+# from vertexai.preview.generative_models import GenerativeModel
+
+from vertexai.generative_models import GenerativeModel, Part, FinishReason
+import vertexai.preview.generative_models as generative_models
+
 
 PROJECT_ID = os.environ.get('GCP_PROJECT', '-')
 LOCATION = os.environ.get('GCP_REGION', '-')
+
+if reset := st.button("Reset Demo State"):
+    reset_st_state()
 
 m = magika.Magika()
 vertexai.init(project=PROJECT_ID, location=LOCATION)
@@ -29,17 +37,37 @@ model = GenerativeModel(
     ],
 )
 
+safety_settings = {
+    generative_models.HarmCategory.HARM_CATEGORY_HATE_SPEECH: generative_models.HarmBlockThreshold.BLOCK_NONE,
+    generative_models.HarmCategory.HARM_CATEGORY_DANGEROUS_CONTENT: generative_models.HarmBlockThreshold.BLOCK_NONE,
+    generative_models.HarmCategory.HARM_CATEGORY_SEXUALLY_EXPLICIT: generative_models.HarmBlockThreshold.BLOCK_NONE,
+    generative_models.HarmCategory.HARM_CATEGORY_HARASSMENT: generative_models.HarmBlockThreshold.BLOCK_NONE,
+}
+
+
 def sendPrompt(input):
+    token_size = model.count_tokens(input)
+    st.write(f"Input Token size: {token_size}")
+    token_size = str(token_size)
+
+    pattern = r"total_billable_characters:\s*(\d+)"
+    match = re.search(pattern, token_size)
+
+    billable_characters = int(match.group(1))
+    valor = (billable_characters / 1000) * 0.0025
+    st.write(f"Valor da chamada: US$ {round(valor,2)}")
+
     prompt_response = model.generate_content(input,
         generation_config={
             "max_output_tokens": 4096,
             "temperature": 0.4,
             "top_p": 1
         },
+        safety_settings=safety_settings,
     )
     return prompt_response
 
-def get_code_prompt(question):
+def get_code_prompt(question, code_index, code_text):
     """Generates a prompt to a code related question."""
 
     prompt = f"""
@@ -99,28 +127,26 @@ def extract_code(repo_dir):
 
 repo_url = st.text_input("Cole um repositório para ser analisado:", """https://github.com/GoogleCloudPlatform/microservices-demo""")
 
+if st.button("Clonar e Index repo"):
+    clone_repo(repo_url, repo_dir)
+    code_index, code_text = extract_code(repo_dir)
+    st.session_state["index"] = code_index
+    st.session_state["text"] = code_text
+ 
 
-if st.button('Clonar repo'):
-    repo = clone_repo(repo_url, repo_dir)
 
-    if repo: 
-        st.button('Indexar Repo')
-        code_index, code_text = extract_code(repo_dir)
-        st.write('Repo indexado com sucesso')
-    
-
-# code_index, code_text = extract_code(repo_dir)
-
-with st.form('my_repo'):
-
-    prompt = st.selectbox('Selecione um prompt:', [
-        'Give me a summary of this codebase, and tell me the top 3 things that I can learn from it.',
-        'Provide a getting started guide to onboard new developers to the codebase.',
-        'Find the top 3 most severe issues in the codebase.',
-        'Find the most severe bug in the codebase that you can provide a code fix for.',
-        'Provide a troubleshooting guide to help resolve common issues.' 
-    ])
-    gerar = st.form_submit_button('Generate')
-
-if gerar:
-    st.write(sendPrompt(prompt))
+question = st.selectbox('Selecione um prompt:', [
+            'Give me a summary of this codebase, and tell me the top 3 things that I can learn from it.',
+            'Provide a getting started guide to onboard new developers to the codebase.',
+            'Find the top 3 most severe issues in the codebase.',
+            'Find the most severe bug in the codebase that you can provide a code fix for.',
+            'Provide a troubleshooting guide to help resolve common issues.' 
+            ])
+        
+if st.button('Generate'):
+    indice = st.session_state["index"]
+    texto = st.session_state["text"]
+    pergunta = get_code_prompt(question, indice, texto)
+    resposta = sendPrompt(pergunta)
+    st.write(resposta.text)
+    st.write(resposta.to_dict().get("usage_metadata"))
