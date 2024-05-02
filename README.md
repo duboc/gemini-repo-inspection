@@ -35,10 +35,10 @@ export GCP_REGION="us-central1" # Set this to the region where you want to run t
 
 5. Additional Resources:
 
-**Streamlit documentation**: https://docs.streamlit.io/
-**Vertex AI documentation**: https://cloud.google.com/vertex-ai/docs
-**Magika documentation**: https://github.com/ahupp/python-magic
-G**itPython documentation**: https://gitpython.readthedocs.io/
+- **Streamlit documentation**: https://docs.streamlit.io/
+- **Vertex AI documentation**: https://cloud.google.com/vertex-ai/docs
+- **Magika documentation**: https://github.com/ahupp/python-magic
+- **GitPython documentation**: https://gitpython.readthedocs.io/
 
 6. Tips:
 
