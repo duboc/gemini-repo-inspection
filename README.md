@@ -8,8 +8,8 @@ Install dependencies: Navigate to the project directory and run pip install -r r
 
 Set up environment variables:
 ```bash 
-GCP_PROJECT: Set this to your Google Cloud Platform project ID.
-GCP_REGION: Set this to the region where you want to run the application.
+export GCP_PROJECT="projectid" # Set this to your Google Cloud Platform project ID.
+export GCP_REGION="us-central1" # Set this to the region where you want to run the application.
 ```
 
 2. Codebase Overview:
