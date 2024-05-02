@@ -32,7 +32,6 @@ export GCP_REGION="us-central1" # Set this to the region where you want to run t
 - The application generates a prompt based on the selected question and the codebase.
 - The prompt is sent to the Gemini model.
 - The model generates a response, which is displayed to the user.
-- 
 
 5. Additional Resources:
 
