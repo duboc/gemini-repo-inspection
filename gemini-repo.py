@@ -47,11 +47,18 @@ def sendPrompt(input):
     token_size = model.count_tokens(input)
     st.write(f"Input Token size: {token_size}")
     token_size = str(token_size)
+    patternToken = r"total_tokens:\s*(\d+)"
+    matchToken = re.search(patternToken, token_size)
 
-    pattern = r"total_billable_characters:\s*(\d+)"
-    match = re.search(pattern, token_size)
+    total_tokens = int(matchToken.group(1))
+    if total_tokens > 1000000:
+        raise ValueError("Total tokens must be less than 1000000")
+    st.write(f"Total Tokens: {total_tokens}")
 
-    billable_characters = int(match.group(1))
+    patternChar = r"total_billable_characters:\s*(\d+)"
+    matchChar = re.search(patternChar, token_size)
+
+    billable_characters = int(matchChar.group(1))
     valor = (billable_characters / 1000) * 0.0025
     st.write(f"Valor da chamada: US$ {round(valor,2)}")
 
