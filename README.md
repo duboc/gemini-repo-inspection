@@ -19,10 +19,10 @@ export GCP_REGION="us-central1" # Set this to the region where you want to run t
 
 3. Key Libraries and Tools:
 
-**Streamlit**: Used for building the web application interface.
-**Vertex AI**: Used for interacting with the Gemini large language model.
-**Magika**: Used for identifying file types.
-**GitPython**: Used for cloning the GitHub repository.
+- **Streamlit**: Used for building the web application interface.
+- **Vertex AI**: Used for interacting with the Gemini large language model.
+- **Magika**: Used for identifying file types.
+- **GitPython**: Used for cloning the GitHub repository.
 
 4. Understanding the Workflow:
 
