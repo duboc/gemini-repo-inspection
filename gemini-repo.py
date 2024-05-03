@@ -1,7 +1,6 @@
 import streamlit as st
 import random
 import time
-import requests
 import re
 import vertexai
 import os
@@ -10,7 +9,7 @@ from pathlib import Path
 from utils_streamlit import reset_st_state
 import git
 import magika
-from requests_html import HTMLSession
+
 
 from vertexai.generative_models import GenerativeModel, Part, FinishReason
 import vertexai.preview.generative_models as generative_models
@@ -25,14 +24,14 @@ if reset := st.button("Reset Demo State"):
 m = magika.Magika()
 vertexai.init(project=PROJECT_ID, location=LOCATION)
 
-MODEL_ID = "gemini-1.5-pro-preview-0409" 
+MODEL_ID = "gemini-experimental" 
 
 model = GenerativeModel(
     MODEL_ID,
-    system_instruction=[
-        "You are a coding expert.",
-        "Your mission is to answer all code related questions with given context and instructions.",
-    ],
+    #system_instruction=[
+    #    "You are a coding expert.",
+    #    "Your mission is to answer all code related questions with given context and instructions.",
+    #],
 )
 
 safety_settings = {
@@ -53,7 +52,7 @@ def sendPrompt(input):
     total_tokens = int(matchToken.group(1))
     if total_tokens > 1000000:
         raise ValueError("Total tokens must be less than 1000000")
-    st.write(f"Total Tokens: {total_tokens}")
+    # st.write(f"Total Tokens: {total_tokens}")
 
     patternChar = r"total_billable_characters:\s*(\d+)"
     matchChar = re.search(patternChar, token_size)
@@ -90,7 +89,6 @@ def get_code_prompt(question, code_index, code_text):
 
     return prompt
 
-sess = HTMLSession()
 
 st.title('Gemini Repo Inspection')
 
@@ -127,16 +125,23 @@ def extract_code(repo_dir):
                         code_text += "\n-------------------------\n"
                 except Exception:
                     pass
-
+    st.write(f"Código indexado com sucesso!")
     return code_index, code_text
 
 repo_url = st.text_input("Cole um repositório para ser analisado:", """https://github.com/GoogleCloudPlatform/microservices-demo""")
 
 if st.button("Clonar e Index repo"):
-    clone_repo(repo_url, repo_dir)
-    code_index, code_text = extract_code(repo_dir)
-    st.session_state["index"] = code_index
-    st.session_state["text"] = code_text
+    with st.status("Downloading data...", expanded=True) as status:
+        st.write("Cloning repo...")
+        time.sleep(1)
+        clone_repo(repo_url, repo_dir)
+        st.write("Indexing data...")
+        code_index, code_text = extract_code(repo_dir)
+        time.sleep(1)
+        st.session_state["index"] = code_index
+        st.session_state["text"] = code_text
+        status.update(label="Download complete!", state="complete", expanded=False)
+
  
 
 
@@ -150,9 +155,10 @@ question = st.selectbox('Selecione um prompt:', [
             ])
         
 if st.button('Generate'):
-    indice = st.session_state["index"]
-    texto = st.session_state["text"]
-    pergunta = get_code_prompt(question, indice, texto)
-    resposta = sendPrompt(pergunta)
-    st.write(resposta.text)
-    st.write(resposta.to_dict().get("usage_metadata"))
+    with st.spinner("Processando resposta"):
+        indice = st.session_state["index"]
+        texto = st.session_state["text"]
+        pergunta = get_code_prompt(question, indice, texto)
+        resposta = sendPrompt(pergunta)
+        st.write(resposta.text)
+        st.write(resposta.to_dict().get("usage_metadata"))
